@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Dec 10 13:56:39 2020
+Created on Tue Jan 12 11:48:02 2021
 
-@author: felgcoll
+@author: usuario
 """
-
-#Se importan librerías a utilizar
 from tkinter import *
+import tkinter as tk
 from tkinter.ttk import *
 from mal import Anime, AnimeSearch
 from PIL import ImageTk, Image
@@ -14,75 +13,76 @@ import os
 import requests
 import io
 
-
-#Abrir ventana
-window = Tk()
-
-#Título de la ventana
+#Ventana
+window = tk.Tk()
 window.title("My AniManga app")
 
-#Geometría de la ventana
-window.geometry('500x400')
+#Canvas
+canvas = tk.Canvas(window, height= 600, width=500, bg='#263042')
+canvas.pack()
 
-#Lbl con un título de bienvenida
-lbl = Label(window, text="Hello, What are u looking 4?")
-#Ubicación
-lbl.grid(column=0, row=0)
+#Cuadro de info
+frame = tk.Frame(canvas, bg = 'White')
+frame.place(relwidth=0.8, relheight=0.9, relx=0.1   , rely=0.2)
 
-#Cuadro de texto para ingresar la búsqueda
-txt = Entry(window, width = 15)
-#Ubicación
-txt.grid(column=1, row=0)
+lbl = tk.Label(canvas, text="ANIME GUI")
+lbl.pack(side='left')
 
-#Función del boton que va a buscar los 5 resultados más similares
+#Pregunta
+lbl1 = tk.Label(canvas, text="Hello, What are u looking 4?")
+lbl1.pack(side='left')
+
+#Cuadro de texto
+txt = tk.Entry(canvas, width = 15)
+txt.pack(side='right')
+
+size = 30,20
+
+filename = r'C:\Users\usuario\Desktop\MyData\My-AniManga-GUI\Toph.jpg'
+
+image = Image.open(filename)
+# The (450, 350) is (height, width)
+image = image.resize((100, 70), Image.ANTIALIAS)
+my_img = ImageTk.PhotoImage(image)
+
+#my_img = tk.Label(frame, image = my_img)
+#my_img.pack()
+
+#img = ImageTk.PhotoImage(Image.open(filename))
+#img = img.subsample(2, 2)
+
+#Función obtener las 5 primeras coincidencias
 def clicked():
-    #Se obtiene el texto ingresado
+    
+    for widget in frame.winfo_children():
+        widget.destroy()
+    
     anime = txt.get()
-    #Se utiliza la api para poder encontrar los resultados
     search = AnimeSearch(anime)
-    #Se crea una lista para guardar los resultados
     animes = []
-    #Se recorren las 5 primeras coincidencias de la búsqueda
-    #Se pueden colocar más, pero el tiempo de request realentiza la operación
     for i in range(5):
-        #Se guardan los resultados
         animes.append(search.results[i].title)
     
-    #Funcion que va a hacer el display de la informacion del anime seleccionado
     def info():
-        #Se obtiene el resultado seleccionado
+        for widget in frame.winfo_children():
+            if isinstance(widget, Label):
+                widget.destroy()
+
+        
         selected = combo.get()
-        #Se hace el set de un índice que posteriormente va a permitir buscar el anime
         index = 0
-        #Se recorre la lista de los nombres de los animes para encontrar su indice
+        
         for i in range(len(animes)):
             if selected == animes[i]:
                 index = i
-        
-        #Con el índice encontrado, es posible encontrar el id con el que
-        #se encuentra guardado en la librería, este id nos permitirá acceder
-        #a gran cantidad de información que posiblemente requeira la persona
+
         anime_id = search.results[index].mal_id
         
-        #Se accede a diferente tipo de información, como lo son el título,
-        #Synopsis, género, tipo, rating, puntuación, rank, animes relacionados, etc
-    
-        #Dentro de la nueva ventanda se definen lo que son diferentes labels
-        #Se crea una nueva ventana
 
+        lbl_title = Label(frame, text = 'Title: ' + Anime(anime_id).title).pack()
         
-        #root.geometry('500x400')
-        #Para el título
-        lbl_title = Label(window)
-        lbl_title.grid(column=0, row=3)
-        lbl_title.configure(text = 'Title: ' + Anime(anime_id).title)
-        
-        #Sinopsis
-        lbl_syp = Label(window)
-        lbl_syp.grid(column=0, row=4)
-        lbl_syp.configure(text = 'Synopsis: ' + Anime(anime_id).synopsis[0:50])
-        
-        #Imagen
+        lbl_syp = Label(frame, text = 'Synopsis: ' + Anime(anime_id).synopsis[0:50]).pack()
+
         img_url = Anime(anime_id).image_url
         response = requests.get(img_url)
         image_bytes = io.BytesIO(response.content)
@@ -90,27 +90,28 @@ def clicked():
         img = Image.open(image_bytes)
         render = ImageTk.PhotoImage(img)
     
-        img = Label(window, image=render)
+        img = Label(frame, image=render)
         img.image = render
-        img.grid(column=0, row=5)
-
-
-    
-    #Una vez dado click se crean los siguientes widgets
-    #Boton para poder obtener la información
-    btn_go = Button(window, text='Info!!', command=info)
-    btn_go.grid(column=3, row=2)
+        img.pack()
+        
+    btn_go = Button(frame, text='Info!!', command=info)
+    btn_go.pack()
     
     #Combobox que hará display de las 5 primeras coincidencias
     box_value=StringVar()
-    combo = Combobox(window, textvariable = box_value)
-    combo.grid(column=0, row=2)
+    combo = Combobox(frame, textvariable = box_value)
     combo['values'] = animes
+    combo.pack()
+    
+    
 
-#Boton que va a realizar la busqueda del anime
-btn = Button(window, text='Search!!', command=clicked)
-#Ubicación
-btn.grid(column=3, row=0)
+btn = Button(canvas, text='Search!!', command=clicked)
 
-#Loop de la ventana
+canvas.create_window(200, 25, window=lbl)
+canvas.create_window(200, 50, window=lbl1)
+canvas.create_window(350, 50, window=txt)
+canvas.create_window(450, 50, window=btn)
+canvas.create_image(60,70, image=my_img)
+
+
 window.mainloop()
